@@ -1,0 +1,26 @@
+name: Hiroop Service Respiration Detector | CD | Staging
+
+on:
+  push:
+    branches: [ "staging" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: executing remote ssh commands using key
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+            export NVM_DIR=~/.nvm
+            source ~/.nvm/nvm.sh
+            cd app/hiroop/services/respiration-detector
+            git reset --hard HEAD
+            git pull
+            git switch staging
+            git pull origin staging
+            pm2 restart hiroop-srv-respiration-detector-prod
