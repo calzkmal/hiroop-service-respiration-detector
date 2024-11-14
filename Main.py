@@ -1,4 +1,4 @@
-from Pipeline import extract_features
+from Pipeline import FeatureExtractor
 from flask import Flask, request, jsonify
 import tensorflow as tf
 import numpy as np
@@ -6,6 +6,9 @@ import os
 from datetime import datetime
 
 app = Flask(__name__)
+
+# Initialize the FeatureExtractor
+extractor = FeatureExtractor()
 
 # Configs
 model_path = './model/modelv3.keras'
@@ -20,6 +23,7 @@ def allowed_file(filename):
 @app.route("/predict-audio", methods=['POST'])
 def predict_audio():
   if 'file' not in request.files:
+
     return jsonify({
         "status": 400,
         "message": "Bad Request, No Audio Provided",
@@ -37,11 +41,16 @@ def predict_audio():
     file_path = os.path.join('./server_data', filename)
     file.save(file_path)
 
-  features = extract_features(file_path)
+  features = extractor.get_features(file_path)
     
   if features is not None:
+    # Reshape the data to match the model input shape (None, 162, 1)
     features = np.expand_dims(features, axis=(0, 2))
+
+    # Make a prediction
     prediction = model.predict(features)
+
+    # Convert prediction to a dictionary with probabilities and labels
     prediction_probabilities = {label.lower(): float(prob) for label, prob in zip(label_classes, prediction[0])}
 
     return jsonify({
@@ -49,6 +58,7 @@ def predict_audio():
       "message": "OK",
       "data": prediction_probabilities
     })
+  
   else:
 
     return jsonify({
