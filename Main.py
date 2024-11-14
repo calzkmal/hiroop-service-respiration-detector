@@ -2,6 +2,8 @@ from Pipeline import extract_features
 from flask import Flask, request, jsonify
 import tensorflow as tf
 import numpy as np
+import os
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -9,24 +11,33 @@ app = Flask(__name__)
 model_path = './model/modelv3.keras'
 model = tf.keras.models.load_model(model_path)
 label_classes = ['Bronchial', 'asthma', 'copd', 'healthy', 'pneumonia']
+ALLOWED_EXTENSIONS = {'wav'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+      filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route("/predict-audio", methods=['POST'])
 def predict_audio():
-  data = request.get_json()
-    
-  if 'audio_path' not in data:
+  if 'file' not in request.files:
     return jsonify({
         "status": 400,
-        "message": "Bad Request, No Audio Path Provided",
+        "message": "Bad Request, No Audio Provided",
         "err": {
             "data": {
               "code": -1
             }
         }
     }), 400
-    
-  audio_path = data['audio_path']
-  features = extract_features(audio_path)
+  
+  file = request.files['file']
+  
+  if file and allowed_file(file.filename):
+    filename = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3] + ".wav"
+    file_path = os.path.join('./server_data', filename)
+    file.save(file_path)
+
+  features = extract_features(file_path)
     
   if features is not None:
     features = np.expand_dims(features, axis=(0, 2))
