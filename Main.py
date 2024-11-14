@@ -50,4 +50,4 @@ def predict_audio():
         }
     }), 500
 
-app.run(host='0.0.0.0', port=4200)
+app.run(host='0.0.0.0', port=10110)
