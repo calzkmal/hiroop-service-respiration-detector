@@ -11,7 +11,7 @@ app = Flask(__name__)
 extractor = FeatureExtractor()
 
 # Configs
-model_path = './model/modelv3.keras'
+model_path = './model/model.keras'
 model = tf.keras.models.load_model(model_path)
 label_classes = ['Bronchial', 'asthma', 'copd', 'healthy', 'pneumonia']
 ALLOWED_EXTENSIONS = {'wav'}
